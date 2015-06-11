@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+        <title>ArcGIS Map Application</title>
+        <link rel="stylesheet" href="http://js.arcgis.com/3.13/dijit/themes/claro/claro.css">
+        <link rel="stylesheet" href="http://js.arcgis.com/3.13/esri/css/esri.css">
+        <link rel="stylesheet" href="/Pagination/pagination.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/Styles/site.css">
+        <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+        <script src="http://js.arcgis.com/3.13/"></script>
+        <script src="/Pagination/jquery.quick.pagination.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+        <script type="text/javascript">
+            var map;
+
+            require(["esri/map","esri/geometry/Point","esri/symbols/SimpleMarkerSymbol","esri/graphic", "esri/InfoTemplate","dojo/dom", "dojo/dom-construct", "dojo/dom-style", "dojo/query", "dojo/on",
+      "dojo/parser", "dojo/_base/array", "dojo/dnd/Source", "dijit/registry","dijit/form/Button", "dojo/domReady!"], 
+                
+                function(Map, Point, SimpleMarkerSymbol, Graphic, InfoTemplate, dom, domConstruct, domStyle, query, on, parser, arrayUtils, Source, registry) {
+                    
+                    parser.parse();
+
+                    map = new Map("mapDiv", {
+                        basemap: "streets",
+                        center: [-118.488145, 34.019693],
+                        zoom: 16
+                    });
+
+                    map.on("load", mapLoaded);
+
+                    registry.byId("all").on("click",function(){
+                        map.graphics.clear();
+                        $("#mapDataDiv ul li").remove();
+                        getCafeMarkers();
+                        getLotMarkers();
+                    })
+                    
+                    registry.byId("cafes").on("click",function(){
+                        $("#mapDataDiv ul li").remove();
+                        map.graphics.clear();
+                        getCafeMarkers()
+                    });
+                    
+                    registry.byId("lots").on("click",function(){
+                        $("#mapDataDiv ul li").remove();
+                        map.graphics.clear();
+                        getLotMarkers()
+                    });
+
+                    function mapLoaded(){
+                        map.graphics.clear();
+                    }
+
+                    function createSymbol(path, color){
+                          var markerSymbol = new esri.symbol.SimpleMarkerSymbol();
+                          markerSymbol.setPath(path);
+                          markerSymbol.setSize(40);
+                          markerSymbol.setColor(new dojo.Color(color));
+                          markerSymbol.setOutline(null);
+                          return markerSymbol;
+                    }
+
+                    function getCafeMarkers(){
+
+                         var cafeIconPath = "M36.591,39.606c8.158-0.328,11.784-4.041,11.784-8.585c0-3.947-2.739-7.268-8.806-8.288    c0.027-1.468,0.029-2.884,0.029-4.206H0.909c0,8.644,0.01,21.2,7.776,27.197c-4.713,0.361-7.776,0.935-7.776,1.581    c0,1.094,8.661,1.979,19.345,1.979s19.344-0.885,19.344-1.979c0-0.646-3.063-1.221-7.775-1.581    C33.931,44.097,35.472,41.991,36.591,39.606z M39.425,26.492c3.404,0.789,4.012,2.458,3.973,4.619    c-0.043,2.454-0.754,4.115-5.402,4.687C38.837,32.811,39.235,29.604,39.425,26.492z M5.579,21.527h6.048    c-2.711,8,1.863,20.658,1.862,20.658C3.601,34.606,5.579,21.527,5.579,21.527z";
+
+                        var cafeIconColor = "#73BE73";
+
+                       
+
+                        $.getJSON("/JSON/cafes.json", function(cafes){
+                            $.each(cafes, function(i,cafe){
+                                var graphic = new Graphic(new Point(cafe.place.lng,cafe.place.lat), createSymbol(cafeIconPath,cafeIconColor));
+                                graphic.setInfoTemplate(createCafeInfoTemplate(cafe));
+                                map.graphics.add(graphic);
+                                $("#mapDataDiv ul").append("<li><div class=\"panel panel-primary\"><div class=\"panel-heading\">"+cafe.meta.name+"</div><div class=\"panel-body\">"+cafe.meta.details+"<br/><br/><strong>Address</strong><br/>"+cafe.place.address+"<br/>Santa Monica, CA 90277<br/><a href=\"#\" onclick=\"refreshMap("+cafe.place.lat+","+cafe.place.lng+");\">Show</a></div></li>");
+                            });
+                            $("ul.pagination").quickPagination({pageSize:"2"});
+                        });
+                    }
+
+                    function createCafeInfoTemplate(cafe){
+                        var cafeInfoTemplate = new esri.InfoTemplate();
+                        cafeInfoTemplate.setTitle("Coffee 4U");
+                        cafeInfoTemplate.setContent("<h3>"+cafe.meta.name+"</h3><p>"+cafe.meta.details+"</p><p><h4>Address</h4><p>"+cafe.place.address+"<br/>Santa Monica, CA 90277</p>");
+                        return cafeInfoTemplate;
+                    }
+
+
+                    function getLotMarkers(){
+
+                        var lotIconPath = "M142.5,0C63.934,0,0,63.934,0,142.5S63.934,285,142.5,285S285,221.066,285,142.5S221.066,0,142.5,0z M142.5,271.424    c-71.083,0-128.924-57.841-128.924-128.924S71.417,13.576,142.5,13.576S271.424,71.417,271.424,142.5    S213.583,271.424,142.5,271.424z M153.138,62.919H98.637c-12.586,0-20.831,4.991-20.831,20.843v120.507c0,10.632,6.928,17.807,17.788,17.807    c10.854,0,17.807-7.175,17.807-17.807v-42.336h39.515c34.524,0,54.279-21.065,54.279-49.504    C207.194,77.683,183.11,62.919,153.138,62.919z M146.632,134.583H113.4V90.269h29.545c17.584,0,28.661,6.525,28.661,22.16    C171.606,125.881,160.956,134.583,146.632,134.583z";
+
+                        var lotIconColor = "#FF5722";
+
+                
+                         $.getJSON("/JSON/lots.json", function(data){
+                            $.each(data, function(i,lot){
+                                var graphic = new Graphic(new Point(lot.place.lng,lot.place.lat), createSymbol(lotIconPath,lotIconColor));
+                                graphic.setInfoTemplate(createLotInfoTemplate(lot));
+                                map.graphics.add(graphic);
+                                $("#mapDataDiv ul").append("<li><div class=\"panel panel-primary\"><div class=\"panel-heading\">"+lot.meta.name+"</div><div class=\"panel-body\">"+lot.meta.details+"<br/><br/><strong>Address</strong><br/>"+lot.place.address+"<br/>Santa Monica, CA 90277<br/><a href=\"#\" onclick=\"refreshMap("+lot.place.lat+","+lot.place.lng+");\">Show</a></div></li>");
+                               
+                            });
+                            $("ul.pagination").quickPagination({pageSize:"2"});
+                        });
+
+                    }
+
+
+                    function createLotInfoTemplate(lot){
+                        var lotInfoTemplate  = new esri.InfoTemplate();
+                        lotInfoTemplate.setTitle("Parking 4U");
+                        lotInfoTemplate.setContent("<h3>"+lot.meta.name+"</h3><p>"+lot.meta.details+"</p><p><h4>Address</h4><p>"+lot.place.address+"<br/>Santa Monica, CA 90277</p>");
+                        return lotInfoTemplate;
+                    }
+                });
+
+                function refreshMap(lat,lng){
+                        map.centerAndZoom(new esri.geometry.Point(lng,lat),20);
+                }
+
+        </script>
+    </head>
+
+    <body class="claro">
+        <div id="mapDiv">
+           <div id="sidebar">
+                <div id="mapControlsDiv">
+                    <button id="all" data-dojo-type="dijit/form/Button">All</button>
+                    <button id="cafes" data-dojo-type="dijit/form/Button">Coffee</button>
+                    <button id="lots" data-dojo-type="dijit/form/Button">Parking Lot</button>
+                </div>
+
+                <div id="mapDataDiv">
+                    <ul class="pagination" style="margin:0px;width:100%;"></ul>
+            </div>
+        </div>
+
+
+        <div id="footer">Icon made by <a href="http://www.freepik.com" title="Freepik">Freepik</a> from <a href="http://www.flaticon.com" title="Flaticon">www.flaticon.com</a> is licensed under <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0">CC BY 3.0</a></div>
+    </body>
+
+   
+</html>

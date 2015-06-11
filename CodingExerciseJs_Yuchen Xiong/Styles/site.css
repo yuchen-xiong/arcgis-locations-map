@@ -1,0 +1,51 @@
+html, body, #mapDiv {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    width:100%;
+}
+
+
+#mapControlsDiv {
+    font-family: arial;
+    margin: 5px;
+    padding: 10px;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 30;
+}
+
+
+
+#mapDataDiv {
+    background: #ffffff;
+    font-family: arial;
+    margin: 0px;
+    padding: 0px;
+    height: 80%;
+    width:220px;
+    position: absolute;
+    top: 70px;
+    right: 10px;
+    opacity: 0.8;
+    z-index:35;
+    overflow: hidden;
+}
+
+.dataItem{
+    list-style-type: none;;
+    margin:2 0 2 0px;
+}
+
+
+#footer {
+    background: #ffffff;
+    opacity: 0.3;
+    position:absolute;
+    font-family: arial;
+    font-size:12px;
+    left: 10px;
+    bottom: 10px;
+    z-index: 34;
+}
